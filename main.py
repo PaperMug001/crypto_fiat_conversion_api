@@ -214,3 +214,31 @@ def convert(
                 "converted": fmt(converted), "via": "ecb"}
 
     raise HTTPException(status_code=400, detail=f"Unsupported conversion: {from_currency} -> {to_currency}")
+
+
+# -------------------
+# Symbols Endpoint
+# -------------------
+@app.get("/symbols")
+def symbols():
+    ecb_rates = get_ecb_rates()
+    binance_prices = get_binance_prices()
+
+    # ECB/Fiat currencies
+    fiat_symbols = sorted(list(ecb_rates.keys()))
+
+    # Binance/crypto symbols
+    crypto_symbols = set()
+    for symbol in binance_prices.keys():
+        # Only include base currency from pairs ending with USDT or directly listed pairs
+        if symbol.endswith("USDT"):
+            crypto_symbols.add(symbol[:-4])
+        else:
+            crypto_symbols.add(symbol)
+
+    crypto_symbols = sorted(list(crypto_symbols))
+
+    return {
+        "fiat": fiat_symbols,
+        "crypto": crypto_symbols
+    }
